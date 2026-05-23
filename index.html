@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VulnScan 1.0 — Security Operations Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Exo+2:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="crt-overlay"></div>
+  <div class="grid-bg"></div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">VS</div>
+      <div class="logo-text">
+        <span class="lt-main">VulnScan</span>
+        <span class="lt-ver">v1.0</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-group-label">MAIN</div>
+      <a class="nav-link active" data-page="dashboard" href="#">
+        <i class="fa fa-gauge-high"></i><span>Dashboard</span>
+      </a>
+      <a class="nav-link" data-page="scanner" href="#">
+        <i class="fa fa-crosshairs"></i><span>New Scan</span>
+        <span class="nav-badge" id="activeScanBadge" style="display:none">●</span>
+      </a>
+      <a class="nav-link" data-page="history" href="#">
+        <i class="fa fa-clock-rotate-left"></i><span>Scan History</span>
+      </a>
+      <a class="nav-link" data-page="intel" href="#">
+        <i class="fa fa-satellite-dish"></i><span>Threat Intel</span>
+      </a>
+
+      <!-- <div class="nav-group-label" style="margin-top:1.5rem">REPORTS</div>
+      <a class="nav-link" data-page="reports" href="#">
+        <i class="fa fa-file-shield"></i><span>Reports</span>
+      </a> -->
+
+      <div class="nav-group-label" style="margin-top:1.5rem">SYSTEM</div>
+      <a class="nav-link" data-page="settings" href="#">
+        <i class="fa fa-sliders"></i><span>Settings</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sys-status">
+        <span class="status-dot" id="sidebarDot"></span>
+        <span id="sidebarStatus"></span>
+      </div>
+      <div class="sys-time" id="sidebarTime"></div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <div class="content-wrap">
+
+    <!-- TOP BAR -->
+    <header class="topbar">
+      <button class="sidebar-toggle" onclick="toggleSidebar()"><i class="fa fa-bars"></i></button>
+      <div class="topbar-breadcrumb">
+        <span class="bc-root">VulnScan</span>
+        <span class="bc-sep">/</span>
+        <span class="bc-page" id="bcPage">Dashboard</span>
+      </div>
+      <div class="topbar-right">
+        <div class="threat-ticker" id="threatTicker">
+          <i class="fa fa-shield-halved"></i>
+          <span>OWASP 2025 Active · 40+ Checks · Multi-API Intel</span>
+        </div>
+        <div class="topbar-clock" id="topbarClock"></div>
+      </div>
+    </header>
+
+    <!-- PAGES -->
+    <main class="main-content">
+
+      <!-- ── DASHBOARD PAGE ── -->
+      <div class="page active" id="page-dashboard">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Security Dashboard</h1>
+            <p class="page-sub">Real-time vulnerability intelligence and scan analytics</p>
+          </div>
+          <button class="btn-primary" onclick="navigate('scanner')">
+            <i class="fa fa-plus"></i> New Scan
+          </button>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="kpi-grid" id="kpiGrid">
+          <div class="kpi-card" style="--accent-kpi:#ff003c">
+            <div class="kpi-icon"><i class="fa fa-bug"></i></div>
+            <div class="kpi-data">
+              <div class="kpi-num" id="kpiTotalVulns">—</div>
+              <div class="kpi-label">Total Vulnerabilities</div>
+            </div>
+            <div class="kpi-trend up" id="kpiVulnTrend"></div>
+          </div>
+          <div class="kpi-card" style="--accent-kpi:#00ffe7">
+            <div class="kpi-icon"><i class="fa fa-satellite-dish"></i></div>
+            <div class="kpi-data">
+              <div class="kpi-num" id="kpiTotalScans">—</div>
+              <div class="kpi-label">Total Scans</div>
+            </div>
+          </div>
+          <div class="kpi-card" style="--accent-kpi:#f0b429">
+            <div class="kpi-icon"><i class="fa fa-triangle-exclamation"></i></div>
+            <div class="kpi-data">
+              <div class="kpi-num" id="kpiCritical">—</div>
+              <div class="kpi-label">Critical Findings</div>
+            </div>
+          </div>
+          <div class="kpi-card" style="--accent-kpi:#39ff14">
+            <div class="kpi-icon"><i class="fa fa-calendar-week"></i></div>
+            <div class="kpi-data">
+              <div class="kpi-num" id="kpiWeek">—</div>
+              <div class="kpi-label">Scans This Week</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="charts-row">
+          <div class="chart-panel large">
+            <div class="panel-header">
+              <span class="panel-title"><i class="fa fa-chart-pie"></i> Vulnerability Distribution</span>
+            </div>
+            <div class="chart-wrap">
+              <canvas id="severityChart"></canvas>
+            </div>
+          </div>
+          <div class="chart-panel">
+            <div class="panel-header">
+              <span class="panel-title"><i class="fa fa-chart-bar"></i> Category Breakdown</span>
+            </div>
+            <div class="chart-wrap">
+              <canvas id="categoryChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Scans -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title"><i class="fa fa-list-check"></i> Recent Scans</span>
+            <button class="btn-ghost" onclick="navigate('history')">View All</button>
+          </div>
+          <div id="dashRecentScans" class="table-wrap"></div>
+        </div>
+      </div>
+
+      <!-- ── SCANNER PAGE ── -->
+      <div class="page" id="page-scanner">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Vulnerability Scanner</h1>
+            <p class="page-sub">OWASP 2025 · Injection · SSL · DNS · Threat Intel · CVE lookup</p>
+          </div>
+        </div>
+
+        <!-- Scan Input -->
+        <div class="scan-panel">
+          <div class="scan-label">// TARGET URL</div>
+          <div class="scan-row">
+            <div class="scan-input-group">
+              <span class="scan-proto" id="scanProto">https://</span>
+              <input type="text" id="targetUrl" class="scan-input" placeholder="example.com" autocomplete="off" spellcheck="false" />
+            </div>
+            <button class="scan-btn" id="scanBtn" onclick="startScan()">
+              <i class="fa fa-crosshairs"></i><span>INITIATE SCAN</span>
+            </button>
+          </div>
+
+          <!-- Scan Modules -->
+          <div class="modules-grid">
+            <label class="module-toggle" title="OWASP 2025 Top 10 checks">
+              <input type="checkbox" id="optOwasp" checked />
+              <div class="module-box">
+                <i class="fa fa-shield-halved"></i>
+                <span class="mod-name">OWASP 2025</span>
+                <span class="mod-count">10 checks</span>
+              </div>
+            </label>
+            <label class="module-toggle" title="SQL, XSS, CSRF, SSTI, LFI, XXE">
+              <input type="checkbox" id="optInjection" checked />
+              <div class="module-box">
+                <i class="fa fa-syringe"></i>
+                <span class="mod-name">Injection Suite</span>
+                <span class="mod-count">8 vectors</span>
+              </div>
+            </label>
+            <label class="module-toggle" title="29 ports with service detection">
+              <input type="checkbox" id="optPorts" checked />
+              <div class="module-box">
+                <i class="fa fa-network-wired"></i>
+                <span class="mod-name">Port Scan</span>
+                <span class="mod-count">29 ports</span>
+              </div>
+            </label>
+            <label class="module-toggle" title="Framework, CMS, library detection + CVE lookup">
+              <input type="checkbox" id="optTech" checked />
+              <div class="module-box">
+                <i class="fa fa-fingerprint"></i>
+                <span class="mod-name">Tech + CVE</span>
+                <span class="mod-count">NVD NIST</span>
+              </div>
+            </label>
+            <label class="module-toggle" title="TLS certificate analysis">
+              <input type="checkbox" id="optSsl" checked />
+              <div class="module-box">
+                <i class="fa fa-lock"></i>
+                <span class="mod-name">SSL/TLS</span>
+                <span class="mod-count">Cert analysis</span>
+              </div>
+            </label>
+            <label class="module-toggle" title="SPF, DMARC, DKIM, DNSSEC">
+              <input type="checkbox" id="optDns" checked />
+              <div class="module-box">
+                <i class="fa fa-server"></i>
+                <span class="mod-name">DNS Security</span>
+                <span class="mod-count">SPF·DMARC</span>
+              </div>
+            </label>
+            <label class="module-toggle" title="VirusTotal, Shodan, Google Safe Browsing, HIBP">
+              <input type="checkbox" id="optThreat" checked />
+              <div class="module-box">
+                <i class="fa fa-satellite-dish"></i>
+                <span class="mod-name">Threat Intel</span>
+                <span class="mod-count">4 APIs</span>
+              </div>
+            </label>
+            <label class="module-toggle" title="Sensitive files, HTTP methods, cookies, CORS">
+              <input type="checkbox" id="optDeep" checked />
+              <div class="module-box">
+                <i class="fa fa-magnifying-glass-chart"></i>
+                <span class="mod-name">Deep Scan</span>
+                <span class="mod-count">CORS·Files</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Terminal -->
+        <div id="terminalPanel" class="terminal-panel hidden">
+          <div class="term-header">
+            <div class="term-dots">
+              <span class="tdot red"></span><span class="tdot yellow"></span><span class="tdot green"></span>
+            </div>
+            <span class="term-title" id="termTitle">vulnscan_engine — idle</span>
+            <div class="term-controls">
+              <span id="termElapsed" class="term-elapsed">00:00</span>
+            </div>
+          </div>
+          <div class="term-body" id="termLog"></div>
+          <div class="term-progress">
+            <div class="term-prog-bar" id="termProgBar"></div>
+          </div>
+          <div class="term-prog-label" id="termProgLabel">Initializing...</div>
+        </div>
+
+        <!-- Results -->
+        <div id="resultsPanel" class="results-panel hidden">
+          <!-- Summary bar -->
+          <div class="results-summary-bar">
+            <div class="rsb-meta">
+              <div class="rsb-item"><span class="rsb-l">TARGET</span><span class="rsb-v" id="rTarget">—</span></div>
+              <div class="rsb-item"><span class="rsb-l">SCAN ID</span><span class="rsb-v accent" id="rScanId">—</span></div>
+              <div class="rsb-item"><span class="rsb-l">DURATION</span><span class="rsb-v" id="rDuration">—</span></div>
+              <div class="rsb-item"><span class="rsb-l">WAF</span><span class="rsb-v" id="rWaf">—</span></div>
+              <div class="rsb-item"><span class="rsb-l">RISK SCORE</span>
+                <span class="rsb-v risk-score-badge" id="rScore">—</span>
+              </div>
+            </div>
+            <div class="rsb-actions">
+              <button class="btn-ghost" onclick="startScan()"><i class="fa fa-rotate"></i> Rescan</button>
+              <button class="btn-accent" onclick="downloadReport()"><i class="fa fa-file-arrow-down"></i> Export</button>
+            </div>
+          </div>
+
+          <!-- Severity counters -->
+          <div class="severity-bar" id="severityBar"></div>
+
+          <!-- Risk meter -->
+          <div class="risk-meter-wrap">
+            <canvas id="riskGauge" width="200" height="110"></canvas>
+            <div class="risk-meter-label">
+              <div class="rm-score" id="rmScore">0</div>
+              <div class="rm-text" id="rmText">Computing...</div>
+            </div>
+          </div>
+
+          <!-- Threat Intel Row -->
+          <div class="intel-row" id="intelRow" style="display:none"></div>
+
+          <!-- Result Tabs -->
+          <div class="result-tabs">
+            <button class="rtab active" data-tab="owasp"><i class="fa fa-shield-halved"></i> OWASP</button>
+            <button class="rtab" data-tab="injection"><i class="fa fa-syringe"></i> Injection</button>
+            <button class="rtab" data-tab="exposure"><i class="fa fa-folder-open"></i> Exposure</button>
+            <button class="rtab" data-tab="dns"><i class="fa fa-server"></i> DNS/SSL</button>
+            <button class="rtab" data-tab="ports"><i class="fa fa-network-wired"></i> Ports</button>
+            <button class="rtab" data-tab="tech"><i class="fa fa-microchip"></i> Tech</button>
+            <button class="rtab" data-tab="cve"><i class="fa fa-virus"></i> CVEs</button>
+          </div>
+
+          <div id="tab-owasp" class="rtab-content active"></div>
+          <div id="tab-injection" class="rtab-content"></div>
+          <div id="tab-exposure" class="rtab-content"></div>
+          <div id="tab-dns" class="rtab-content"></div>
+          <div id="tab-ports" class="rtab-content"></div>
+          <div id="tab-tech" class="rtab-content"></div>
+          <div id="tab-cve" class="rtab-content"></div>
+        </div>
+      </div>
+
+      <!-- ── HISTORY PAGE ── -->
+      <div class="page" id="page-history">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Scan History</h1>
+            <p class="page-sub">Complete audit log of all vulnerability assessments</p>
+          </div>
+          <div class="topbar-right" style="gap:8px">
+            <input class="search-input" id="historySearch" placeholder="Search URL or ID..." oninput="filterHistory()" />
+          </div>
+        </div>
+        <div class="panel">
+          <div id="historyContent" class="table-wrap"></div>
+        </div>
+      </div>
+
+      <!-- ── THREAT INTEL PAGE ── -->
+      <div class="page" id="page-intel">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Threat Intelligence</h1>
+            <p class="page-sub">External API threat data for the most recent scan</p>
+          </div>
+        </div>
+        <div id="intelPageContent">
+          <div class="empty-state"><i class="fa fa-satellite-dish"></i><p>Run a scan to see threat intelligence data.</p></div>
+        </div>
+      </div>
+
+      <!-- ── REPORTS PAGE ── -->
+      <!-- <div class="page" id="page-reports">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Reports</h1>
+            <p class="page-sub">Export and manage security assessment reports</p>
+          </div>
+        </div>
+        <div id="reportsContent">
+          <div class="empty-state"><i class="fa fa-file-shield"></i><p>Complete a scan to generate a report.</p></div>
+        </div>
+      </div> -->
+
+      <!-- ── SETTINGS PAGE ── -->
+      <div class="page" id="page-settings">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Settings</h1>
+            <p class="page-sub">API key configuration and scanner options</p>
+          </div>
+        </div>
+        <div class="settings-grid">
+          <div class="panel settings-panel">
+            <div class="panel-header"><span class="panel-title"><i class="fa fa-key"></i> API Keys</span></div>
+            <div class="settings-body">
+              <div class="setting-item">
+                <div class="si-label"><i class="fa fa-virus-covid" style="color:#f0b429"></i> VirusTotal</div>
+                <div class="si-desc">URL reputation scanning · 4 req/min free · <a href="https://virustotal.com" target="_blank">Get key</a></div>
+                <input class="setting-input" id="cfg_vt" placeholder="Enter VirusTotal API key" type="password"/>
+              </div>
+              <div class="setting-item">
+                <div class="si-label"><i class="fa fa-magnifying-glass-location" style="color:#00ffe7"></i> Shodan</div>
+                <div class="si-desc">Host intelligence, open ports, CVEs · <a href="https://shodan.io" target="_blank">Get key</a></div>
+                <input class="setting-input" id="cfg_shodan" placeholder="Enter Shodan API key" type="password"/>
+              </div>
+              <div class="setting-item">
+                <div class="si-label"><i class="fa fa-globe" style="color:#6e8cff"></i> URLScan.io</div>
+                <div class="si-desc">Full website screenshot & analysis · Free 60 req/min · <a href="https://urlscan.io" target="_blank">Get key</a></div>
+                <input class="setting-input" id="cfg_urlscan" placeholder="Enter URLScan.io API key" type="password"/>
+              </div>
+              <div class="setting-item">
+                <div class="si-label"><i class="fa fa-shield" style="color:#39ff14"></i> Google Safe Browsing</div>
+                <div class="si-desc">Malware & phishing detection · Free with Google Cloud · <a href="https://console.cloud.google.com" target="_blank">Get key</a></div>
+                <input class="setting-input" id="cfg_gsb" placeholder="Enter Google API key" type="password"/>
+              </div>
+              <div class="setting-item">
+                <div class="si-label"><i class="fa fa-database" style="color:#ff6b35"></i> HaveIBeenPwned</div>
+                <div class="si-desc">Domain breach detection · $3.50/mo · <a href="https://haveibeenpwned.com/API/Key" target="_blank">Get key</a></div>
+                <input class="setting-input" id="cfg_hibp" placeholder="Enter HIBP API key" type="password"/>
+              </div>
+              <button class="btn-primary" style="margin-top:1rem" onclick="saveSettings()"><i class="fa fa-floppy-disk"></i> Save to config.py</button>
+              <div class="settings-note">Keys are saved to config.py on your server — never stored in the browser.</div>
+            </div>
+          </div>
+          <div class="panel settings-panel">
+            <div class="panel-header"><span class="panel-title"><i class="fa fa-database"></i> Database</span></div>
+            <div class="settings-body">
+              <div class="setting-item">
+                <div class="si-label">MySQL Host</div>
+                <input class="setting-input" id="cfg_dbhost" placeholder="localhost" />
+              </div>
+              <div class="setting-item">
+                <div class="si-label">Database</div>
+                <input class="setting-input" id="cfg_dbname" placeholder="vulnscan" />
+              </div>
+              <div class="setting-item">
+                <div class="si-label">Username</div>
+                <input class="setting-input" id="cfg_dbuser" placeholder="vulnscan_user" />
+              </div>
+              <div class="setting-item">
+                <div class="si-label">Password</div>
+                <input class="setting-input" id="cfg_dbpass" placeholder="••••••••" type="password" />
+              </div>
+              <div class="api-status-grid" id="apiStatusGrid"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
