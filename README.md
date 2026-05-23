@@ -1,10 +1,10 @@
-# VulnScan — Web Vulnerability Scanner
+# 🛡️ VulnScan — Web Vulnerability Scanner
 
 A professional security operations dashboard with 40+ checks, multi-API threat intelligence, and real-time scanning
 
 ---
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 vulnscan/
@@ -21,7 +21,7 @@ vulnscan/
 
 ---
 
-## Features
+## ✨ Features
 
 ### OWASP 2025 Top 10 (All 10)
 - A01 — Broken Access Control + IDOR detection
@@ -86,6 +86,25 @@ Detects: Cloudflare, AWS WAF, Akamai, Sucuri, ModSecurity, Imperva, Barracuda, F
 
 ---
 
+## 🛠️ Technology Stack
+
+**Frontend:**
+- HTML5
+- CSS3
+- JavaScript (ES6+)
+- Chart.js 4.4
+
+**Backend:**
+- Python 3.14.3
+- Flask 3.0 (REST API & Backend Server)
+- Requests 2.31 (HTTP Client & Web Requests)
+- BeautifulSoup4 4.12 (HTML Parsing & Scraping)
+
+**Database**
+- MySQL
+
+---
+
 ## Setup
 
 ### 1. MySQL
@@ -134,6 +153,14 @@ pip install -r requirements.txt
 # Start server
 python app.py
 # → Running on http://127.0.0.1:5500/
+
+# Troubleshooting
+- Open Powershell or use VScode Terminal
+- Type 'deactivate' to deactivate venv
+- Delete old venv file : Remove-Item -Recurse -Force venv
+- Check python version : py -0
+- Create new venv file : py -3.14.3 -m venv venv
+- Activate venv : .\venv\Scripts\Activate
 ```
 
 ### 4. Frontend
