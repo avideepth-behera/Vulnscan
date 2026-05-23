@@ -1,4 +1,4 @@
-# VulnScan v1.0 — Advanced Web Vulnerability Scanner
+# VulnScan — Web Vulnerability Scanner
 
 A professional security operations dashboard with 40+ checks, multi-API threat intelligence, and real-time scanning
 
