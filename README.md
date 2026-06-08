@@ -145,7 +145,9 @@ Or configure them from the Settings page in the dashboard.
 ```bash
 # Create virtual environment
 python -m venv venv
-venv\Scripts\activate
+
+# Activate venv
+.\venv\Scripts\Activate.ps1
 
 # Install dependencies
 pip install -r requirements.txt
@@ -154,13 +156,6 @@ pip install -r requirements.txt
 python app.py
 # → Running on http://127.0.0.1:5500/
 
-# Troubleshooting
-- Open Powershell or use VScode Terminal
-- Type 'deactivate' to deactivate venv
-- Delete old venv file : Remove-Item -Recurse -Force venv
-- Check python version : py -0
-- Create new venv file : py -3.14.3 -m venv venv
-- Activate venv : .\venv\Scripts\Activate
 ```
 
 ### 4. Frontend
@@ -177,10 +172,10 @@ python -m http.server 3000
 
 ---
 
-## Troubleshoot
+## Troubleshoot (Backend)
 
-```bash
 # Unable to install or process dependencies inside venv
+```bash
 
 # Check if python installation
 python --version
