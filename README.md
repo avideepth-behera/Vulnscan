@@ -174,7 +174,7 @@ python -m http.server 3000
 
 ## Troubleshoot (Backend)
 
-# Unable to install or process dependencies inside venv
+Unable to install or process dependencies inside venv
 ```bash
 
 # Check if python installation
