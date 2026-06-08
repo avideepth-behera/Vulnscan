@@ -411,6 +411,11 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-ui); o
 .tc-cat { font-family: var(--font-mono); font-size: 0.58rem; color: var(--text-dim); letter-spacing: 1px; margin-top: 2px; }
 .tc-ver { font-family: var(--font-mono); font-size: 0.68rem; color: var(--yellow); margin-top: 2px; }
 
+.page-title {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
 /* ── History Table ── */
 .table-wrap { overflow-x: auto; }
 .h-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
