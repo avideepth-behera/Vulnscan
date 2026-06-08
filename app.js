@@ -51,6 +51,16 @@ function navigate(page) {
   if (page === 'settings') checkApiStatus();
 }
 
+function showReportTitle() {
+  const title = document.getElementById('reportTitle');
+  if (title) title.style.display = 'block';
+}
+
+function hideReportTitle() {
+  const title = document.getElementById('reportTitle');
+  if (title) title.style.display = 'none';
+}
+
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('collapsed');
   document.getElementById('sidebar').classList.toggle('open');
@@ -414,6 +424,15 @@ function renderResults(data, scanId, url) {
   document.querySelectorAll('.rtab-content').forEach(c => c.classList.remove('active'));
   document.querySelector('.rtab[data-tab="owasp"]').classList.add('active');
   document.getElementById('tab-owasp').classList.add('active');
+
+  showReportTitle();
+}
+
+function clearReports() {
+  document.getElementById('reportsContent').innerHTML =
+    '<div class="empty-state"><i class="fa fa-file-shield"></i><p>Complete a scan to generate a report.</p></div>';
+
+  hideReportTitle();
 }
 
 function drawRiskGauge(score) {
