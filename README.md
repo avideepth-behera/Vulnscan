@@ -177,6 +177,38 @@ python -m http.server 3000
 
 ---
 
+## Troubleshoot
+
+```bash
+# Unable to install or process dependencies inside venv
+
+# Check if python installation
+python --version
+# If Python is not found, install or reinstall Python first.
+
+# Look for 
+C:\vulnscan\venv\Scripts\python.exe
+# If it doesn't exist, then the virtual environment is broken.
+
+#If the folder is in use, first deactivate the virtual environment:
+deactivate
+
+# Remove the existing venv folder 
+Remove-Item -Recurse -Force venv
+
+# Recreate the virtual environment
+python -m venv venv
+
+# Activate venv
+.\venv\Scripts\Activate.ps1
+
+# Then install dependencies
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+---
+
 ## REST API
 
 | Method | Endpoint | Description |
