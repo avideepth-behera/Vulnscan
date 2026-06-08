@@ -39,11 +39,6 @@
         <i class="fa fa-satellite-dish"></i><span>Threat Intel</span>
       </a>
 
-      <!-- <div class="nav-group-label" style="margin-top:1.5rem">REPORTS</div>
-      <a class="nav-link" data-page="reports" href="#">
-        <i class="fa fa-file-shield"></i><span>Reports</span>
-      </a> -->
-
       <div class="nav-group-label" style="margin-top:1.5rem">SYSTEM</div>
       <a class="nav-link" data-page="settings" href="#">
         <i class="fa fa-sliders"></i><span>Settings</span>
@@ -73,7 +68,7 @@
       <div class="topbar-right">
         <div class="threat-ticker" id="threatTicker">
           <i class="fa fa-shield-halved"></i>
-          <span>OWASP 2025 Active · 40+ Checks · Multi-API Intel</span>
+          <span>OWASP 2025</span>
         </div>
         <div class="topbar-clock" id="topbarClock"></div>
       </div>
@@ -87,7 +82,6 @@
         <div class="page-header">
           <div>
             <h1 class="page-title">Security Dashboard</h1>
-            <p class="page-sub">Real-time vulnerability intelligence and scan analytics</p>
           </div>
           <button class="btn-primary" onclick="navigate('scanner')">
             <i class="fa fa-plus"></i> New Scan
@@ -162,7 +156,6 @@
         <div class="page-header">
           <div>
             <h1 class="page-title">Vulnerability Scanner</h1>
-            <p class="page-sub">OWASP 2025 · Injection · SSL · DNS · Threat Intel · CVE lookup</p>
           </div>
         </div>
 
@@ -266,6 +259,12 @@
           <div class="term-prog-label" id="termProgLabel">Initializing...</div>
         </div>
 
+        <div>
+          <h1 class="page-title" id="reportTitle" style="display:none;">
+            Report Summary
+          </h1>
+        </div>
+
         <!-- Results -->
         <div id="resultsPanel" class="results-panel hidden">
           <!-- Summary bar -->
@@ -326,7 +325,6 @@
         <div class="page-header">
           <div>
             <h1 class="page-title">Scan History</h1>
-            <p class="page-sub">Complete audit log of all vulnerability assessments</p>
           </div>
           <div class="topbar-right" style="gap:8px">
             <input class="search-input" id="historySearch" placeholder="Search URL or ID..." oninput="filterHistory()" />
@@ -342,7 +340,6 @@
         <div class="page-header">
           <div>
             <h1 class="page-title">Threat Intelligence</h1>
-            <p class="page-sub">External API threat data for the most recent scan</p>
           </div>
         </div>
         <div id="intelPageContent">
@@ -350,25 +347,11 @@
         </div>
       </div>
 
-      <!-- ── REPORTS PAGE ── -->
-      <!-- <div class="page" id="page-reports">
-        <div class="page-header">
-          <div>
-            <h1 class="page-title">Reports</h1>
-            <p class="page-sub">Export and manage security assessment reports</p>
-          </div>
-        </div>
-        <div id="reportsContent">
-          <div class="empty-state"><i class="fa fa-file-shield"></i><p>Complete a scan to generate a report.</p></div>
-        </div>
-      </div> -->
-
       <!-- ── SETTINGS PAGE ── -->
       <div class="page" id="page-settings">
         <div class="page-header">
           <div>
             <h1 class="page-title">Settings</h1>
-            <p class="page-sub">API key configuration and scanner options</p>
           </div>
         </div>
         <div class="settings-grid">
