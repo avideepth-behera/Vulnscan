@@ -232,6 +232,13 @@ POST /scan
 
 ---
 
+## Images
+
+![Alt text](path/to/image.png)
+![Alt text](path/to/image.png)
+
+---
+
 ## Legal Disclaimer
 
 VulnScan is for **authorized security testing only**.  
