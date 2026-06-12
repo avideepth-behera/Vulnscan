@@ -53,23 +53,30 @@ XSS_PAYLOADS = [
 
 SENSITIVE_FILES = [
     ('/.env', 'Environment File', 'critical'),
-    ('/.git/HEAD', 'Git Repository', 'critical'),
+    ('/.git/HEAD', 'Git Repository', 'high'),
     ('/config.php', 'Config File', 'high'),
     ('/wp-config.php', 'WordPress Config', 'critical'),
+
     ('/backup.sql', 'Database Backup', 'critical'),
     ('/database.sql', 'Database Backup', 'critical'),
-    ('/phpinfo.php', 'PHP Info Page', 'high'),
+
+    ('/phpinfo.php', 'PHP Info Page', 'medium'),
     ('/server-status', 'Apache Status', 'medium'),
-    ('/admin', 'Admin Panel', 'high'),
-    ('/administrator', 'Admin Panel', 'high'),
+
     ('/.htaccess', 'Apache Config', 'medium'),
+
     ('/robots.txt', 'Robots File', 'info'),
     ('/sitemap.xml', 'Sitemap', 'info'),
-    ('/crossdomain.xml', 'Flash Policy', 'low'),
+
+    ('/crossdomain.xml', 'Flash Policy', 'info'),
+
     ('/.DS_Store', 'Mac DS_Store', 'medium'),
-    ('/package.json', 'NPM Package File', 'medium'),
+
+    ('/package.json', 'NPM Package File', 'low'),
     ('/composer.json', 'PHP Composer', 'low'),
-    ('/web.config', 'IIS Config', 'high'),
+
+    ('/web.config', 'IIS Config', 'medium'),
+
     ('/.bash_history', 'Bash History', 'critical'),
     ('/id_rsa', 'SSH Private Key', 'critical'),
 ]
@@ -179,7 +186,14 @@ class VulnScanner:
 
     # ─────────────────────────────────────────────────────────────────────────
     def _add(self, vuln):
-        uid = vuln.get('id', vuln.get('name', ''))
+
+        vuln.setdefault("confidence", "medium")
+
+        uid = vuln.get(
+            'id',
+            vuln.get('name', '')
+        )
+
         if uid not in self._vuln_ids:
             self._vuln_ids.add(uid)
             self.results['vulnerabilities'].append(vuln)
@@ -193,16 +207,37 @@ class VulnScanner:
         for path in admin_paths:
             try:
                 r = self.session.get(self.url + path, allow_redirects=False, timeout=6)
-                if r.status_code == 200 and len(r.text) > 50:
+                homepage_similarity = difflib.SequenceMatcher(
+                    None,
+                    resp.text[:5000],
+                    r.text[:5000]
+                ).ratio()
+
+                admin_keywords = [
+                    "admin dashboard",
+                    "user management",
+                    "administrator",
+                    "control panel",
+                    "role management",
+                    "site settings"
+                ]
+
+                if (
+                    r.status_code == 200
+                    and len(r.text) > 500
+                    and homepage_similarity < 0.70
+                    and any(k in r.text.lower() for k in admin_keywords)
+                ):
                     self._add({
                         'id': 'A01-BAC', 'owasp_id': 'A01:2025', 'category': 'owasp',
                         'name': 'Broken Access Control',
-                        'severity': 'critical',
+                        'severity': 'medium',
                         'description': f'Sensitive endpoint accessible without authentication: {path}',
                         'impact': 'Unauthenticated access to admin functions, data exfiltration',
                         'recommendation': 'Implement deny-by-default RBAC. Verify every request server-side.',
                         'evidence': f'GET {self.url + path} → HTTP 200 ({len(r.text)} bytes)',
-                        'cvss': '9.8',
+                        'cvss': '5.3',
+                        'confidence': 'low',
                     })
                     break
             except Exception:
@@ -217,16 +252,27 @@ class VulnScanner:
                     test_url = self.url.replace(f'{key}={vals[0]}', f'{key}={test_id}')
                     try:
                         r = self.session.get(test_url, timeout=6)
-                        if r.status_code == 200 and r.text != resp.text and len(r.text) > 100:
+                        similarity = difflib.SequenceMatcher(
+                            None,
+                            resp.text[:5000],
+                            r.text[:5000]
+                        ).ratio()
+
+                        if (
+                            r.status_code == 200
+                            and len(r.text) > 500
+                            and similarity < 0.40
+                        ):
                             self._add({
                                 'id': 'A01-IDOR', 'owasp_id': 'A01:2025', 'category': 'owasp',
                                 'name': 'IDOR — Insecure Direct Object Reference',
-                                'severity': 'high',
+                                'severity': 'medium',
                                 'description': f'Changing numeric parameter `{key}` returns a different valid resource.',
                                 'impact': "Unauthorized access to other users' data",
                                 'recommendation': 'Validate object ownership on every request. Use UUIDs instead of sequential IDs.',
                                 'evidence': f'?{key}={vals[0]} vs ?{key}={test_id} — different valid responses',
-                                'cvss': '8.1',
+                                'cvss': '5.8',
+                                'confidence': 'low',
                             })
                     except Exception:
                         pass
@@ -352,25 +398,50 @@ class VulnScanner:
                     action = form.get('action', self.url)
                     if not action.startswith('http'):
                         action = self.url + '/' + action.lstrip('/')
-                    for _ in range(5):
-                        self.session.post(action, data={'username': 'admin', 'password': 'wrongpass'}, timeout=5, allow_redirects=False)
-                    r = self.session.post(action, data={'username': 'admin', 'password': 'wrongpass'}, timeout=5, allow_redirects=False)
-                    if r.status_code in (200, 302):
-                        self._add({
+                        responses = []
+
+                        for _ in range(10):
+                            rr = self.session.post(
+                                action,
+                                data={
+                                    'username': 'scanner_test',
+                                    'password': 'wrong_password'
+                                },
+                                timeout=5,
+                                allow_redirects=False
+                            )
+                            responses.append(rr)
+
+                        last = responses[-1]
+
+                        body = last.text.lower()
+
+                        rate_limited = (
+                            last.status_code == 429
+                            or "too many requests" in body
+                            or "rate limit" in body
+                            or "captcha" in body
+                            or "temporarily blocked" in body
+                        )
+
+                        if not rate_limited:
+                            self._add({
                             'id': 'A04-RATELIMIT', 'owasp_id': 'A04:2025', 'category': 'owasp',
                             'name': 'No Rate Limiting on Login',
-                            'severity': 'high',
+                            'severity': 'low',
                             'description': 'Login endpoint accepts unlimited requests without lockout or throttling.',
                             'impact': 'Brute-force credential attacks',
                             'recommendation': 'Implement rate limiting (max 5 attempts/min), CAPTCHA, and account lockout.',
                             'evidence': f'5 rapid POST requests to {action} — no lockout triggered',
-                            'cvss': '7.5',
+                            'cvss': '3.7',
+                            'confidence': 'low',
                         })
                 except Exception:
                     pass
                 break
 
         # ── A05 — Security Misconfiguration ──────────────────────────────────
+
         sec_headers = {
             'content-security-policy': (
                 'Content-Security-Policy',
@@ -380,9 +451,9 @@ class VulnScanner:
             ),
             'x-frame-options': (
                 'X-Frame-Options',
-                'medium',
+                'low',
                 'Prevents clickjacking',
-                '4.3'
+                '3.1'
             ),
             'x-content-type-options': (
                 'X-Content-Type-Options',
@@ -390,30 +461,13 @@ class VulnScanner:
                 'Prevents MIME sniffing',
                 '3.1'
             ),
-            'permissions-policy': (
-                'Permissions-Policy',
-                'info',
-                'Controls browser APIs',
-                '0.0'
-            ),
-            'referrer-policy': (
-                'Referrer-Policy',
-                'low',
-                'Controls referrer leakage',
-                '2.6'
-            ),
-            'cross-origin-embedder-policy': (
-                'COEP',
-                'info',
-                'Prevents cross-origin isolation leaks',
-                '0.0'
-            ),
-            'cross-origin-opener-policy': (
-                'COOP',
-                'info',
-                'Prevents window attacks',
-                '0.0'
-            ),
+        }
+
+        optional_headers = {
+            'referrer-policy': 'Referrer-Policy',
+            'permissions-policy': 'Permissions-Policy',
+            'cross-origin-embedder-policy': 'Cross-Origin-Embedder-Policy',
+            'cross-origin-opener-policy': 'Cross-Origin-Opener-Policy'
         }
 
         missing = [
@@ -422,17 +476,39 @@ class VulnScanner:
             if key not in h
         ]
 
+        missing_optional = [
+            name
+            for key, name in optional_headers.items()
+            if key not in h
+        ]
+
         if missing:
-            # Determine overall severity
+
             if any(sev == 'medium' for _, sev, _, _ in missing):
                 overall_severity = 'medium'
                 overall_cvss = '5.3'
+
             elif any(sev == 'low' for _, sev, _, _ in missing):
                 overall_severity = 'low'
                 overall_cvss = '3.1'
+
             else:
                 overall_severity = 'info'
                 overall_cvss = '0.0'
+
+            evidence = (
+                'Missing: ' +
+                ', '.join(
+                    f'{n} (CVSS {c})'
+                    for n, _, _, c in missing
+                )
+            )
+
+            if missing_optional:
+                evidence += (
+                    ' | Optional Missing: ' +
+                    ', '.join(missing_optional)
+                )
 
             self._add({
                 'id': 'A05-HEADERS',
@@ -440,45 +516,21 @@ class VulnScanner:
                 'category': 'owasp',
                 'name': 'Missing Security Headers',
                 'severity': overall_severity,
+                'confidence': 'medium',
                 'description': (
-                    f'{len(missing)}/{len(sec_headers)} recommended '
+                    f'{len(missing)}/{len(sec_headers)} important '
                     f'security headers are absent.'
                 ),
                 'impact': (
-                    'May increase exposure to XSS, clickjacking, '
-                    'MIME sniffing, referrer leakage, and cross-origin attacks.'
+                    'May increase exposure to XSS, clickjacking '
+                    'and MIME-sniffing attacks.'
                 ),
                 'recommendation': (
-                    'Configure missing headers in nginx/Apache/application middleware. '
-                    'Verify using https://securityheaders.com.'
+                    'Configure the missing security headers in '
+                    'your web server or application framework.'
                 ),
-                'evidence': 'Missing: ' + ', '.join(
-                    f'{n} (CVSS {c})' for n, _, _, c in missing[:6]
-                ),
+                'evidence': evidence,
                 'cvss': overall_cvss,
-            })
-
-        server = h.get('server', '') + ' ' + h.get('x-powered-by', '')
-
-        if re.search(r'\d+\.\d+', server):
-            self._add({
-                'id': 'A05-DISCLOSURE',
-                'owasp_id': 'A05:2025',
-                'category': 'owasp',
-                'name': 'Server Version Disclosure',
-                'severity': 'low',
-                'description': (
-                    'Exact server software version exposed in response headers.'
-                ),
-                'impact': (
-                    'May assist attackers in identifying known vulnerabilities '
-                    'associated with the disclosed version.'
-                ),
-                'recommendation': (
-                    'Remove version details from Server and X-Powered-By headers.'
-                ),
-                'evidence': f'Server: {server.strip()}',
-                'cvss': '3.7',
             })
 
         # ── A06 — Vulnerable Components ──────────────────────────────────────
@@ -533,48 +585,6 @@ class VulnScanner:
 
         # ── A09 — Logging / Monitoring ───────────────────────────────
 
-        TRACE_HEADERS = [
-            'x-request-id',
-            'x-correlation-id',
-            'x-trace-id',
-        ]
-
-        missing_headers = [
-            hdr for hdr in TRACE_HEADERS
-            if hdr not in h
-        ]
-
-        if len(missing_headers) == len(TRACE_HEADERS):
-
-            self._add({
-                'id': 'A09-LOGGING',
-                'owasp_id': 'A09:2025',
-                'category': 'owasp',
-                'name': 'No Public Request Tracing Headers',
-                'severity': 'info',
-                'description': (
-                    'No public request tracing or correlation '
-                    'headers were observed in the HTTP response.'
-                ),
-                'impact': (
-                    'Limited security impact. Missing public tracing '
-                    'headers may reduce operational debugging visibility.'
-                ),
-                'recommendation': (
-                    'Consider using request correlation IDs for '
-                    'centralized logging and incident investigation.'
-                ),
-                'evidence': (
-                    'Missing headers: '
-                    + ', '.join([
-                        'X-Request-ID',
-                        'X-Correlation-ID',
-                        'X-Trace-ID'
-                    ])
-                ),
-                'cvss': '0.0',
-            })
-
         # ── A10 — SSRF ────────────────────────────────────────────────────────
         if self.parsed.query:
             params      = urllib.parse.parse_qs(self.parsed.query)
@@ -584,12 +594,13 @@ class VulnScanner:
                 self._add({
                     'id': 'A10-SSRF', 'owasp_id': 'A10:2025', 'category': 'owasp',
                     'name': 'Potential SSRF — URL-Like Parameters',
-                    'severity': 'high',
+                    'severity': 'info',
                     'description': f'Parameters {ssrf_params} may trigger server-side URL fetching without validation.',
                     'impact': 'Internal network enumeration, cloud metadata exfiltration, RCE',
                     'recommendation': 'Validate/whitelist all server-side URL destinations. Block internal IP ranges.',
                     'evidence': f'URL-like params detected: {", ".join(ssrf_params)}',
-                    'cvss': '8.6',
+                    'cvss': '0.0',
+                    'confidence': 'low'
                 })
 
     # ─────────────────────────────────────────────────────────────────────────
@@ -962,24 +973,71 @@ class VulnScanner:
                     pass
 
         # CSRF Detection
-        forms      = soup.find_all('form', method=lambda m: m and m.upper() == 'POST')
-        csrf_tokens = ['csrf', '_token', 'authenticity_token', 'nonce', '__requestverificationtoken', 'csrfmiddlewaretoken']
+        forms = soup.find_all(
+            'form',
+            method=lambda m: m and m.upper() == 'POST'
+        )
+
+        csrf_tokens = [
+            'csrf',
+            '_csrf',
+            '_token',
+            'csrf_token',
+            'authenticity_token',
+            'nonce',
+            '__requestverificationtoken',
+            'csrfmiddlewaretoken'
+        ]
+
+        cookie_string = "; ".join(
+            f"{c.name}={c.value}"
+            for c in self.session.cookies
+        ).lower()
+
+        has_samesite = (
+            'samesite=lax' in cookie_string
+            or 'samesite=strict' in cookie_string
+        )
+
         for form in forms:
-            inputs   = [i.get('name', '').lower() for i in form.find_all('input')]
-            has_csrf = any(tok in inp for inp in inputs for tok in csrf_tokens)
-            samesite = any('samesite=strict' in str(c).lower() for c in self.session.cookies)
-            if not has_csrf and not samesite:
+
+            inputs = [
+                i.get('name', '').lower()
+                for i in form.find_all('input')
+            ]
+
+            has_csrf = any(
+                token in field
+                for field in inputs
+                for token in csrf_tokens
+            )
+
+            # Only flag if BOTH protections appear absent
+            if not has_csrf and not has_samesite:
+
                 action = form.get('action', '/')
+
                 self._add({
-                    'id': 'CSRF-01', 'category': 'injection',
-                    'name': 'CSRF — Missing Token',
-                    'severity': 'medium',
-                    'description': 'POST form has no CSRF token and no SameSite=Strict cookie.',
-                    'impact': 'Attacker-crafted pages can trigger actions on behalf of authenticated users',
-                    'recommendation': 'Add CSRF tokens (synchronizer token pattern) or set SameSite=Strict on session cookies.',
-                    'evidence': f'Form action={action} — inputs: {inputs[:5]}',
-                    'cvss': '6.5',
+                    'id': 'CSRF-01',
+                    'category': 'injection',
+                    'name': 'Potential CSRF Protection Missing',
+                    'severity': 'info',
+                    'confidence': 'low',
+                    'description': (
+                        'POST form detected without an obvious CSRF token. '
+                        'Additional CSRF protections may exist.'
+                    ),
+                    'impact': (
+                        'This is a heuristic observation and does not confirm '
+                        'a CSRF vulnerability.'
+                    ),
+                    'recommendation': (
+                        'Verify that CSRF protections such as synchronizer tokens, '
+                        'SameSite cookies, origin validation, or custom headers are implemented.'
+                    ),
+                    'cvss': '0.0',
                 })
+
                 break
 
         # Server-Side Template Injection
@@ -1117,20 +1175,8 @@ class VulnScanner:
 
     # ─────────────────────────────────────────────────────────────────────────
     def _check_sensitive_files(self):
-
-        INTERESTING_KEYWORDS = [
-            'password',
-            'secret',
-            'token',
-            'apikey',
-            'api_key',
-            'private',
-            'backup',
-            '.env',
-            'database',
-            'db_password',
-            'aws_access_key',
-        ]
+        
+        import difflib
 
         ROBOTS_SENSITIVE_HINTS = [
             '/admin',
@@ -1141,32 +1187,134 @@ class VulnScanner:
             '/config',
         ]
 
+        FILE_SIGNATURES = {
+            '.env': [
+                'APP_KEY=',
+                'DB_PASSWORD=',
+                'DATABASE_URL=',
+                'SECRET_KEY='
+            ],
+
+            '.git/HEAD': [
+                'ref: refs/heads/'
+            ],
+
+            'config.php': [
+                '$db_host',
+                '$db_user',
+                '$db_pass',
+                'mysqli_connect(',
+                'PDO('
+            ],
+
+            'wp-config.php': [
+                'DB_NAME',
+                'DB_PASSWORD',
+                '$table_prefix'
+            ],
+
+            'phpinfo.php': [
+                '<title>phpinfo()',
+                'php version',
+                'zend engine',
+                'php credits'
+            ],
+
+            'web.config': [
+                '<configuration',
+                '<system.web',
+                '<system.webserver'
+            ],
+
+            'backup.sql': [
+                'CREATE TABLE',
+                'INSERT INTO',
+                'DROP TABLE'
+            ],
+
+            'database.sql': [
+                'CREATE TABLE',
+                'INSERT INTO',
+                'DROP TABLE'
+            ],
+
+            '.bash_history': [
+                'sudo ',
+                'ssh ',
+                'mysql ',
+                'curl '
+            ],
+
+            'id_rsa': [
+                '-----BEGIN RSA PRIVATE KEY-----',
+                '-----BEGIN OPENSSH PRIVATE KEY-----'
+            ]
+        }
+
+        try:
+            baseline = self.session.get(
+                self.url,
+                timeout=6
+            )
+
+            baseline_text = baseline.text[:10000]
+
+        except Exception:
+            return
+
         for path, name, severity in SENSITIVE_FILES:
 
             try:
+
+                test_url = self.url + path
+
                 r = self.session.get(
-                    self.url + path,
-                    timeout=5,
+                    test_url,
+                    timeout=6,
                     allow_redirects=False
                 )
 
                 if r.status_code != 200:
                     continue
 
-                body = r.text.lower()
+                body = r.text
 
                 if len(body.strip()) < 10:
                     continue
 
-                is_sensitive = any(
-                    kw in body
-                    for kw in INTERESTING_KEYWORDS
-                )
+                similarity = difflib.SequenceMatcher(
+                    None,
+                    baseline_text,
+                    body[:10000]
+                ).ratio()
 
+                # Skip homepage/SPA responses
+                if similarity > 0.75:
+                    continue
+
+                content_type = (
+                    r.headers.get(
+                        'Content-Type',
+                        ''
+                    ).lower()
+                )
+                
+                if filename in [
+                    'config.php',
+                    'phpinfo.php',
+                    'web.config'
+                ]:
+
+                    if 'html' in content_type:
+
+                        if not verified:
+                            continue
+
+                # robots.txt handling
                 if path == '/robots.txt':
 
                     has_sensitive_paths = any(
-                        p in body
+                        p in body.lower()
                         for p in ROBOTS_SENSITIVE_HINTS
                     )
 
@@ -1175,79 +1323,178 @@ class VulnScanner:
                         'category': 'exposure',
                         'name': 'Robots.txt Publicly Accessible',
                         'severity': 'info',
+                        'confidence': 'high',
                         'description': (
-                            '`/robots.txt` is publicly accessible. '
-                            'This is standard behavior for most websites.'
+                            '`/robots.txt` is publicly accessible.'
                         ),
                         'impact': (
-                            'Search engine crawler rules may disclose '
-                            'non-public application paths.'
-                            if has_sensitive_paths else
-                            'No direct security impact identified.'
+                            'May disclose internal paths.'
+                            if has_sensitive_paths
+                            else
+                            'No direct security impact.'
                         ),
                         'recommendation': (
-                            'Avoid listing sensitive internal paths '
-                            'inside robots.txt.'
-                            if has_sensitive_paths else
-                            'No remediation required.'
+                            'Avoid exposing sensitive paths.'
                         ),
                         'evidence': (
-                            f'GET {self.url + path} → '
-                            f'HTTP 200 ({len(r.text)} bytes)'
+                            f'GET {test_url} → '
+                            f'HTTP 200 ({len(body)} bytes)'
                         ),
-                        'cvss': '0.0' if not has_sensitive_paths else '2.6',
+                        'cvss': (
+                            '2.6'
+                            if has_sensitive_paths
+                            else '0.0'
+                        ),
                     })
 
                     continue
 
-                if is_sensitive or severity == 'critical':
+                verified = False
 
-                    self._add({
-                        'id': f'FILE-{path.replace("/", "").upper()}',
-                        'category': 'exposure',
-                        'name': f'Sensitive File Exposed: {name}',
-                        'severity': severity,
-                        'description': (
-                            f'`{path}` is publicly accessible and may '
-                            f'contain sensitive information.'
-                        ),
-                        'impact': (
-                            'Potential disclosure of credentials, '
-                            'configuration details, or internal application data.'
-                        ),
-                        'recommendation': (
-                            f'Remove `{path}` from public web access '
-                            f'or restrict access via server configuration.'
-                        ),
-                        'evidence': (
-                            f'GET {self.url + path} → '
-                            f'HTTP 200 ({len(r.text)} bytes)'
-                        ),
-                        'cvss': (
-                            '8.6' if severity == 'critical' else '5.3'
-                        ),
-                    })
+                filename = path.lstrip('/')
+
+                verified = False
+
+                if filename in FILE_SIGNATURES:
+
+                    verified = any(
+                        sig.lower() in body.lower()
+                        for sig in FILE_SIGNATURES[filename]
+                    )
+
+                else:
+                    continue
+
+                # Reject HTML pages for files that should not be HTML
+                if (
+                    filename.endswith(
+                        ('.sql', '.env', '.key')
+                    )
+                    and 'html' in content_type
+                ):
+                    verified = False
+
+                if not verified:
+                    continue
+
+                self._add({
+                    'id': f'FILE-{path.replace("/", "").upper()}',
+                    'category': 'exposure',
+                    'name': f'Sensitive File Exposed: {name}',
+                    'severity': severity,
+                    'confidence': 'high',
+                    'description': (
+                        f'`{path}` appears to contain '
+                        f'sensitive information.'
+                    ),
+                    'impact': (
+                        'Potential disclosure of credentials, '
+                        'configuration data, or internal assets.'
+                    ),
+                    'recommendation': (
+                        f'Remove `{path}` from public access '
+                        f'or restrict access.'
+                    ),
+                    'evidence': (
+                        f'GET {test_url} → '
+                        f'HTTP 200 ({len(body)} bytes)'
+                    ),
+                    'cvss': (
+                        '8.6'
+                        if severity == 'critical'
+                        else '5.3'
+                    ),
+                })
 
             except Exception:
                 pass
 
     # ─────────────────────────────────────────────────────────────────────────
     def _check_http_methods(self):
-        dangerous = {'TRACE': 'critical', 'DELETE': 'high', 'PUT': 'high', 'PATCH': 'medium', 'CONNECT': 'high'}
+
+        dangerous = {
+            'TRACE': 'high',
+            'CONNECT': 'medium',
+            'PUT': 'low',
+            'DELETE': 'low',
+            'PATCH': 'info'
+        }
+
+        try:
+            options = self.session.options(
+                self.url,
+                timeout=6,
+                allow_redirects=False
+            )
+
+            allow = options.headers.get(
+                "Allow",
+                ""
+            ).upper()
+
+        except Exception:
+            allow = ""
+
+        try:
+            baseline = self.session.get(
+                self.url,
+                timeout=6,
+                allow_redirects=False
+            )
+        except Exception:
+            return
+
+        cvss_map = {
+            'high': '6.5',
+            'medium': '4.3',
+            'low': '2.6',
+            'info': '0.0'
+        }
+
         for method, severity in dangerous.items():
+
             try:
-                r = self.session.request(method, self.url, timeout=6, allow_redirects=False)
-                if r.status_code not in (405, 501, 403, 400):
+
+                # Skip if OPTIONS explicitly says method isn't allowed
+                if allow and method not in allow:
+                    continue
+
+                r = self.session.request(
+                    method,
+                    self.url,
+                    timeout=6,
+                    allow_redirects=False
+                )
+
+                if (
+                    r.status_code == 200
+                    and len(r.text) > 0
+                    and r.text != baseline.text
+                ):
+
                     self._add({
-                        'id': f'METHOD-{method}', 'category': 'owasp', 'owasp_id': 'A05:2025',
-                        'name': f'Dangerous HTTP Method Enabled: {method}',
+                        'id': f'METHOD-{method}',
+                        'category': 'owasp',
+                        'owasp_id': 'A05:2025',
+                        'name': f'Potentially Dangerous HTTP Method Enabled: {method}',
                         'severity': severity,
-                        'description': f'Server accepts {method} requests which should be disabled.',
-                        'impact': 'TRACE enables XST attacks. PUT/DELETE allow file manipulation on misconfigured servers.',
-                        'recommendation': f'Disable {method} in server config. Only allow GET and POST for web apps.',
-                        'evidence': f'{method} {self.url} → HTTP {r.status_code}',
-                        'cvss': '7.2' if severity == 'critical' else '5.8',
+                        'confidence': 'low',
+                        'description': (
+                            f'Server appears to accept {method} requests.'
+                        ),
+                        'impact': (
+                            'Some HTTP methods can increase attack surface '
+                            'if they are not required by the application.'
+                        ),
+                        'recommendation': (
+                            f'Review whether {method} is required and disable it if unused.'
+                        ),
+                        'evidence': (
+                            f'{method} {self.url} → HTTP {r.status_code}'
+                        ),
+                        'cvss': cvss_map.get(severity, '0.0'),
                     })
+
             except Exception:
                 pass
 
@@ -1563,15 +1810,34 @@ class VulnScanner:
                     'cvss': '7.5',
                 })
             elif ssl_data.get('expiring_soon'):
+
+                days = ssl_data.get("days_remaining", 0)
+
+                if days <= 7:
+                    severity = 'low'
+                    cvss = '3.1'
+                else:
+                    severity = 'info'
+                    cvss = '0.0'
+
                 self._add({
-                    'id': 'SSL-EXPIRING', 'category': 'owasp', 'owasp_id': 'A02:2025',
+                    'id': 'SSL-EXPIRING',
+                    'category': 'owasp',
+                    'owasp_id': 'A02:2025',
                     'name': 'SSL Certificate Expiring Soon',
-                    'severity': 'high',
-                    'description': f'Certificate expires in {ssl_data.get("days_remaining")} days.',
-                    'impact': 'Service disruption when certificate expires',
-                    'recommendation': 'Renew certificate now. Automate with certbot/ACME.',
-                    'evidence': f'Days remaining: {ssl_data.get("days_remaining")}',
-                    'cvss': '5.0',
+                    'severity': severity,
+                    'confidence': 'high',
+                    'description': (
+                        f'Certificate expires in {days} days.'
+                    ),
+                    'impact': (
+                        'Certificate renewal may be required soon.'
+                    ),
+                    'recommendation': (
+                        'Monitor renewal process and ensure automatic renewal is configured.'
+                    ),
+                    'evidence': f'Days remaining: {days}',
+                    'cvss': cvss,
                 })
             if ssl_data.get('weak_cipher'):
                 self._add({
@@ -1831,18 +2097,36 @@ class VulnScanner:
     def _calc_risk_score(self):
 
         SEVERITY_WEIGHTS = {
-            'critical': 35,
-            'high':     15,
-            'medium':    6,
-            'low':       2,
-            'info':      0,
+            'critical': 20,
+            'high': 10,
+            'medium': 5,
+            'low': 2,
+            'info': 0,
         }
 
-        raw = sum(
-            SEVERITY_WEIGHTS.get(v.get('severity', 'info'), 0)
-            for v in self.results['vulnerabilities']
+        CONFIDENCE_WEIGHTS = {
+            'high': 1.0,
+            'medium': 0.6,
+            'low': 0.3,
+        }
+
+        raw = 0
+
+        for vuln in self.results['vulnerabilities']:
+
+            severity = vuln.get('severity', 'info').lower()
+            confidence = vuln.get('confidence', 'medium').lower()
+
+            severity_weight = SEVERITY_WEIGHTS.get(severity, 0)
+            confidence_weight = CONFIDENCE_WEIGHTS.get(confidence, 0.6)
+
+            raw += severity_weight * confidence_weight
+
+        # Logarithmic normalization
+        K = 100
+
+        normalized = round(
+            100 * (1 - math.exp(-raw / K))
         )
 
-        K          = 80   # tune this value to shift the curve up/down (Base value = 80)
-        normalized = round(100 * (1 - math.exp(-raw / K)))
         return min(normalized, 100)
