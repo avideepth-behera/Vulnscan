@@ -234,17 +234,40 @@ POST /scan
 
 ## Images
 
+### Dashboard
 ![Dashboard](images/dashboard.png)
+
+### Scan Page
 ![Scan Page](images/new_scan.png)
+
+### Terminal - Scan in progress
 ![Terminal - Scan in progress](images/scan_terminal_in_progress.png)
+
+### Terminal - Scan completed
 ![Terminal - Scan completed](images/scan_terminal_complete.png)
+
+### Report Summary
 ![Report Summary](images/report_summary_1.png)
+
+### Injection Suite (SQLi, XSS, CSRF, SSRF)
 ![Injection Suite](images/report_injection.png)
+
+### File Exposure
 ![File Exposure](images/report_exposure.png)
+
+### DNS and SSL/TLS summary
 ![DNS and SSL/TLS summary](images/report_dns_ssl.png)
+
+### Technology Used
 ![Techstack](images/report_techstack.png)
+
+### CVE Page (If any)
 ![CVE Page](images/report_cve.png)
+
+### Scan History
 ![Scan History](images/scan_history.png)
+
+### Settings Page
 ![Settings Page](images/settings_page.png)
 
 ---
@@ -254,4 +277,4 @@ POST /scan
 VulnScan is for **authorized security testing only**.  
 Only scan systems you own or have **written permission** to test.  
 Unauthorized use may violate the India IT Act and other laws.
-Developed and Tested by Avideepth B. (Me) & Rhitik P.
+Developed and Tested by Avideepth Behera (Me) & Rhitik Patil (Partner in crime)
