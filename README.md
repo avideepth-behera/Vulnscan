@@ -138,7 +138,7 @@ API_KEYS = {
 }
 ```
 
-Or configure them from the Settings page in the dashboard.
+Don't configure them from the Settings page as for security reasons such as exposing your API key.
 
 ### 3. Python Backend
 
@@ -234,8 +234,18 @@ POST /scan
 
 ## Images
 
-![Alt text](path/to/image.png)
-![Alt text](path/to/image.png)
+![Dashboard](images/dashboard.png)
+![Scan Page](images/new_scan.png)
+![Terminal - Scan in progress](images/scan_terminal_in_progress.png)
+![Terminal - Scan completed](images/scan_terminal_complete.png)
+![Report Summary](images/report_summary_1.png)
+![Injection Suite](images/report_injection.png)
+![File Exposure](images/report_exposure.png)
+![DNS and SSL/TLS summary](images/report_dns_ssl.png)
+![Techstack](images/report_techstack.png)
+![CVE Page](images/report_cve.png)
+![Scan History](images/scan_history.png)
+![Settings Page](images/settings_page.png)
 
 ---
 
