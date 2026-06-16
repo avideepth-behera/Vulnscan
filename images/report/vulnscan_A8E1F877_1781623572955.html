@@ -1,0 +1,226 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><title>VulnScan Report — https://pentest-ground.com:4280</title>
+<style>
+  body{font-family:'Courier New',monospace;background:#05080d;color:#b8ccd8;padding:40px;max-width:1000px;margin:0 auto;line-height:1.6}
+  h1{color:#00ffe7;border-bottom:2px solid #00ffe7;padding-bottom:14px;font-size:2.2rem;letter-spacing:-1px}
+  h2{color:#00ffe7;margin:2rem 0 1rem;font-size:1rem;letter-spacing:3px}
+  .meta{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:1.5rem 0;padding:16px;background:#0d1520;border:1px solid #162030;border-radius:8px}
+  .meta-item label{display:block;font-size:0.6rem;color:#2e4a5a;letter-spacing:2px;margin-bottom:4px}
+  .meta-item span{color:#00ffe7;font-size:0.85rem}
+  .summary{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:1.5rem 0}
+  .sc{text-align:center;padding:14px;border-radius:6px;border-top:3px solid}
+  .sc-num{font-size:1.8rem;font-weight:800}
+  .sc.c{border-top-color:#ff003c} .sc.c .sc-num{color:#ff003c}
+  .sc.h{border-top-color:#ff6b35} .sc.h .sc-num{color:#ff6b35}
+  .sc.m{border-top-color:#f0b429} .sc.m .sc-num{color:#f0b429}
+  .sc.l{border-top-color:#00ffe7} .sc.l .sc-num{color:#00ffe7}
+  .sc.i{border-top-color:#4a9eff} .sc.i .sc-num{color:#4a9eff}
+  .sc-l{font-size:0.55rem;color:#2e4a5a;letter-spacing:2px;margin-top:4px}
+  .score-bar{height:8px;background:#162030;border-radius:4px;margin:1rem 0;overflow:hidden}
+  .score-fill{height:100%;background:linear-gradient(90deg,#39ff14,#f0b429,#ff003c);border-radius:4px}
+  .vuln{background:#0d1520;border:1px solid #162030;border-left:4px solid;border-radius:6px;margin:10px 0;padding:16px}
+  .vuln.critical{border-left-color:#ff003c} .vuln.high{border-left-color:#ff6b35}
+  .vuln.medium{border-left-color:#f0b429} .vuln.low{border-left-color:#00ffe7} .vuln.info{border-left-color:#4a9eff}
+  .vh{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .vn{font-weight:700;font-size:0.95rem;color:#fff}
+  .vb{padding:2px 8px;border-radius:3px;font-size:0.6rem;letter-spacing:1px;font-weight:700}
+  .vb.critical{color:#ff003c;border:1px solid rgba(255,0,60,.3);background:rgba(255,0,60,.1)}
+  .vb.high{color:#ff6b35;border:1px solid rgba(255,107,53,.3);background:rgba(255,107,53,.1)}
+  .vb.medium{color:#f0b429;border:1px solid rgba(240,180,41,.3);background:rgba(240,180,41,.1)}
+  .vb.low{color:#00ffe7;border:1px solid rgba(0,255,231,.2);background:rgba(0,255,231,.08)}
+  .vb.info{color:#4a9eff;border:1px solid rgba(74,158,255,.2);background:rgba(74,158,255,.08)}
+  .vd{font-size:0.82rem;color:#6a8a9a;margin:8px 0}
+  .vr{display:flex;gap:8px;margin-bottom:5px;font-size:0.78rem}
+  .vrl{color:#2e4a5a;min-width:85px;font-size:0.62rem;letter-spacing:1px;padding-top:2px}
+  .ve{background:rgba(240,180,41,.04);border:1px solid rgba(240,180,41,.15);padding:8px;border-radius:4px;font-size:0.7rem;color:#f0b429;margin-top:8px;word-break:break-all}
+  table{width:100%;border-collapse:collapse;font-size:0.78rem;margin-top:10px}
+  th{text-align:left;padding:8px 12px;border-bottom:1px solid #162030;color:#2e4a5a;font-size:0.6rem;letter-spacing:2px;background:#0d1520}
+  td{padding:10px 12px;border-bottom:1px solid rgba(22,32,48,.5)}
+  footer{margin-top:3rem;text-align:center;color:#2e4a5a;font-size:0.65rem;border-top:1px solid #162030;padding-top:1.5rem}
+  .disclaimer{background:rgba(255,0,60,.04);border:1px solid rgba(255,0,60,.15);border-radius:6px;padding:12px 16px;font-size:0.72rem;color:#6a8a9a;margin-bottom:1.5rem}
+</style></head><body>
+<h1>⬡ VULNSCAN v1.0 — SECURITY REPORT</h1>
+<div class="disclaimer">⚠ This report is confidential and intended for authorized security personnel only. Do not distribute without permission.</div>
+<div class="meta">
+  <div class="meta-item"><label>TARGET URL</label><span>https://pentest-ground.com:4280</span></div>
+  <div class="meta-item"><label>SCAN ID</label><span>A8E1F877</span></div>
+  <div class="meta-item">
+  <label>TIMESTAMP</label>
+  <span>
+    16/06/2026 20:56:12 IST
+  </span>
+  </div>
+  <div class="meta-item"><label>RISK SCORE</label><span style="color:#ff6b35">65/100</span></div>
+  <div class="meta-item"><label>WAF DETECTED</label><span>None</span></div>
+  <div class="meta-item"><label>TOTAL FINDINGS</label><span>15</span></div>
+</div>
+<div class="score-bar"><div class="score-fill" style="width:65%"></div></div>
+<h2>// RISK SUMMARY</h2>
+<div class="summary">
+  <div class="sc c"><div class="sc-num">1</div><div class="sc-l">CRITICAL</div></div>
+  <div class="sc h"><div class="sc-num">3</div><div class="sc-l">HIGH</div></div>
+  <div class="sc m"><div class="sc-num">3</div><div class="sc-l">MEDIUM</div></div>
+  <div class="sc l"><div class="sc-num">3</div><div class="sc-l">LOW</div></div>
+  <div class="sc i"><div class="sc-num">5</div><div class="sc-l">INFO</div></div>
+</div>
+<h2>// VULNERABILITY FINDINGS</h2>
+
+<div class="vuln high">
+  <div class="vh">
+    <span class="vn">A05:2025 — Dangerous HTTP Method Enabled: DELETE</span>
+    <span class="vb high">HIGH · CVSS 5.8</span>
+  </div>
+  <div class="vd">Server accepts DELETE requests which should be disabled.</div>
+  <div class="vr"><span class="vrl">IMPACT</span><span>TRACE enables XST attacks. PUT/DELETE allow file manipulation on misconfigured servers.</span></div>
+  <div class="vr"><span class="vrl">REMEDIATION</span><span>Disable DELETE in server config. Only allow GET and POST for web apps.</span></div>
+  <div class="ve">EVIDENCE: DELETE https://pentest-ground.com:4280 → HTTP 200</div>
+</div>
+<div class="vuln high">
+  <div class="vh">
+    <span class="vn">Sensitive File Exposed: PHP Info Page</span>
+    <span class="vb high">HIGH · CVSS 5.3</span>
+  </div>
+  <div class="vd">`/phpinfo.php` is publicly accessible and may contain sensitive information.</div>
+  <div class="vr"><span class="vrl">IMPACT</span><span>Potential disclosure of credentials, configuration details, or internal application data.</span></div>
+  <div class="vr"><span class="vrl">REMEDIATION</span><span>Remove `/phpinfo.php` from public web access or restrict access via server configuration.</span></div>
+  <div class="ve">EVIDENCE: GET https://pentest-ground.com:4280/phpinfo.php → HTTP 200 (87600 bytes)</div>
+</div>
+<div class="vuln high">
+  <div class="vh">
+    <span class="vn">A05:2025 — Dangerous HTTP Method Enabled: PUT</span>
+    <span class="vb high">HIGH · CVSS 5.8</span>
+  </div>
+  <div class="vd">Server accepts PUT requests which should be disabled.</div>
+  <div class="vr"><span class="vrl">IMPACT</span><span>TRACE enables XST attacks. PUT/DELETE allow file manipulation on misconfigured servers.</span></div>
+  <div class="vr"><span class="vrl">REMEDIATION</span><span>Disable PUT in server config. Only allow GET and POST for web apps.</span></div>
+  <div class="ve">EVIDENCE: PUT https://pentest-ground.com:4280 → HTTP 200</div>
+</div>
+<div class="vuln medium">
+  <div class="vh">
+    <span class="vn">A05:2025 — Missing Security Headers</span>
+    <span class="vb medium">MEDIUM · CVSS 5.3</span>
+  </div>
+  <div class="vd">7/7 recommended security headers are absent.</div>
+  <div class="vr"><span class="vrl">IMPACT</span><span>May increase exposure to XSS, clickjacking, MIME sniffing, referrer leakage, and cross-origin attacks.</span></div>
+  <div class="vr"><span class="vrl">REMEDIATION</span><span>Configure missing headers in nginx/Apache/application middleware. Verify using https://securityheaders.com.</span></div>
+  <div class="ve">EVIDENCE: Missing: Content-Security-Policy (CVSS 5.3), X-Frame-Options (CVSS 4.3), X-Content-Type-Options (CVSS 3.1), Permissions-Policy (CVSS 0.0), Referrer-Policy (CVSS 2.6), COEP (CVSS 0.0)</div>
+</div>
+<div class="vuln medium">
+  <div class="vh">
+    <span class="vn">A05:2025 — Dangerous HTTP Method Enabled: PATCH</span>
+    <span class="vb medium">MEDIUM · CVSS 5.8</span>
+  </div>
+  <div class="vd">Server accepts PATCH requests which should be disabled.</div>
+  <div class="vr"><span class="vrl">IMPACT</span><span>TRACE enables XST attacks. PUT/DELETE allow file manipulation on misconfigured servers.</span></div>
+  <div class="vr"><span class="vrl">REMEDIATION</span><span>Disable PATCH in server config. Only allow GET and POST for web apps.</span></div>
+  <div class="ve">EVIDENCE: PATCH https://pentest-ground.com:4280 → HTTP 200</div>
+</div>
+<div class="vuln medium">
+  <div class="vh">
+    <span class="vn">A07:2025 — Cookie Security Attributes Missing — PHPSESSID</span>
+    <span class="vb medium">MEDIUM · CVSS 5.3</span>
+  </div>
+  <div class="vd">Cookie `PHPSESSID` is missing recommended security attributes: Missing Secure flag, Missing SameSite, Missing HttpOnly.</div>
+  <div class="vr"><span class="vrl">IMPACT</span><span>Session cookies missing security attributes may be exposed to interception or cross-site attacks.</span></div>
+  <div class="vr"><span class="vrl">REMEDIATION</span><span>Apply Secure, SameSite, and HttpOnly attributes where appropriate based on the cookie purpose.</span></div>
+  <div class="ve">EVIDENCE: Set-Cookie: PHPSESSID; issues: Missing Secure flag, Missing SameSite, Missing HttpOnly</div>
+</div>
+<div class="vuln low">
+  <div class="vh">
+    <span class="vn">A02:2025 — HSTS Header Not Configured</span>
+    <span class="vb low">LOW · CVSS 3.7</span>
+  </div>
+  <div class="vd">The HTTPS response does not include the `Strict-Transport-Security` header.</div>
+  <div class="vr"><span class="vrl">IMPACT</span><span>Browsers may allow insecure HTTP connections before HTTPS is enforced.</span></div>
+  <div class="vr"><span class="vrl">REMEDIATION</span><span>Consider enabling HSTS using: `Strict-Transport-Security: max-age=31536000; includeSubDomains`</span></div>
+  <div class="ve">EVIDENCE: Response missing Strict-Transport-Security header</div>
+</div>
+<div class="vuln low">
+  <div class="vh">
+    <span class="vn">A05:2025 — Server Version Disclosure</span>
+    <span class="vb low">LOW · CVSS 3.7</span>
+  </div>
+  <div class="vd">Exact server software version exposed in response headers.</div>
+  <div class="vr"><span class="vrl">IMPACT</span><span>May assist attackers in identifying known vulnerabilities associated with the disclosed version.</span></div>
+  <div class="vr"><span class="vrl">REMEDIATION</span><span>Remove version details from Server and X-Powered-By headers.</span></div>
+  <div class="ve">EVIDENCE: Server: nginx/1.31.1 PHP/8.5.7</div>
+</div>
+<div class="vuln low">
+  <div class="vh">
+    <span class="vn">A07:2025 — Cookie Security Attributes Missing — security</span>
+    <span class="vb low">LOW · CVSS 2.6</span>
+  </div>
+  <div class="vd">Cookie `security` is missing recommended security attributes: Missing Secure flag, Missing SameSite.</div>
+  <div class="vr"><span class="vrl">IMPACT</span><span>Non-session cookies are missing recommended security attributes.</span></div>
+  <div class="vr"><span class="vrl">REMEDIATION</span><span>Apply Secure, SameSite, and HttpOnly attributes where appropriate based on the cookie purpose.</span></div>
+  <div class="ve">EVIDENCE: Set-Cookie: security; issues: Missing Secure flag, Missing SameSite</div>
+</div>
+<div class="vuln info">
+  <div class="vh">
+    <span class="vn">A09:2025 — No Public Request Tracing Headers</span>
+    <span class="vb info">INFO · CVSS 0.0</span>
+  </div>
+  <div class="vd">No public request tracing or correlation headers were observed in the HTTP response.</div>
+  <div class="vr"><span class="vrl">IMPACT</span><span>Limited security impact. Missing public tracing headers may reduce operational debugging visibility.</span></div>
+  <div class="vr"><span class="vrl">REMEDIATION</span><span>Consider using request correlation IDs for centralized logging and incident investigation.</span></div>
+  <div class="ve">EVIDENCE: Missing headers: X-Request-ID, X-Correlation-ID, X-Trace-ID</div>
+</div>
+<div class="vuln info">
+  <div class="vh">
+    <span class="vn">SPF Record Not Detected</span>
+    <span class="vb info">INFO · CVSS 0.0</span>
+  </div>
+  <div class="vd">No SPF TXT record was detected for the domain.</div>
+  <div class="vr"><span class="vrl">IMPACT</span><span>No direct security impact identified because no MX records were detected.</span></div>
+  <div class="vr"><span class="vrl">REMEDIATION</span><span>Consider configuring an SPF policy for authorized mail servers.</span></div>
+  <div class="ve">EVIDENCE: No SPF TXT record detected for pentest-ground.com</div>
+</div>
+<div class="vuln info">
+  <div class="vh">
+    <span class="vn">DMARC Record Not Detected</span>
+    <span class="vb info">INFO · CVSS 0.0</span>
+  </div>
+  <div class="vd">No DMARC record was detected for the root domain.</div>
+  <div class="vr"><span class="vrl">IMPACT</span><span>No direct security impact identified because no MX records were detected.</span></div>
+  <div class="vr"><span class="vrl">REMEDIATION</span><span>Consider configuring a DMARC policy for outbound email protection.</span></div>
+  <div class="ve">EVIDENCE: No DMARC record detected at _dmarc.pentest-ground.com</div>
+</div>
+<div class="vuln info">
+  <div class="vh">
+    <span class="vn">DNSSEC Not Enabled</span>
+    <span class="vb info">INFO · CVSS 0.0</span>
+  </div>
+  <div class="vd">No DNSSEC DS records were detected for the root domain.</div>
+  <div class="vr"><span class="vrl">IMPACT</span><span>DNS responses may rely solely on traditional DNS trust mechanisms without DNSSEC validation.</span></div>
+  <div class="vr"><span class="vrl">REMEDIATION</span><span>Consider enabling DNSSEC at the domain registrar and DNS provider.</span></div>
+  <div class="ve">EVIDENCE: No DS records detected for pentest-ground.com</div>
+</div>
+<div class="vuln info">
+  <div class="vh">
+    <span class="vn">Robots.txt Publicly Accessible</span>
+    <span class="vb info">INFO · CVSS 0.0</span>
+  </div>
+  <div class="vd">`/robots.txt` is publicly accessible. This is standard behavior for most websites.</div>
+  <div class="vr"><span class="vrl">IMPACT</span><span>No direct security impact identified.</span></div>
+  <div class="vr"><span class="vrl">REMEDIATION</span><span>No remediation required.</span></div>
+  <div class="ve">EVIDENCE: GET https://pentest-ground.com:4280/robots.txt → HTTP 200 (25 bytes)</div>
+</div>
+<div class="vuln critical">
+  <div class="vh">
+    <span class="vn">Critical Service Exposed: Redis (6379)</span>
+    <span class="vb critical">CRITICAL · CVSS 9.0</span>
+  </div>
+  <div class="vd">Port 6379 (Redis) is accessible from the internet.</div>
+  <div class="vr"><span class="vrl">IMPACT</span><span>Direct exploitation of database/remote access services</span></div>
+  <div class="vr"><span class="vrl">REMEDIATION</span><span>Restrict port 6379 to trusted IPs via firewall. Never expose Redis to the internet.</span></div>
+  <div class="ve">EVIDENCE: Port 6379/TCP OPEN — Redis</div>
+</div>
+<h2>// PORT SCAN RESULTS</h2><table>
+  <thead><tr><th>PORT</th><th>STATE</th><th>SERVICE</th><th>RISK</th></tr></thead>
+  <tbody><tr><td>80</td><td>open</td><td>HTTP</td><td>LOW</td></tr><tr><td>443</td><td>open</td><td>HTTPS</td><td>INFO</td></tr><tr><td>6379</td><td>open</td><td>Redis</td><td>CRITICAL</td></tr></tbody>
+</table>
+<h2>// TECHNOLOGY STACK</h2><table>
+  <thead><tr><th>NAME</th><th>CATEGORY</th><th>VERSION</th></tr></thead>
+  <tbody><tr><td>nginx</td><td>Web Server</td><td>1.31.1</td></tr><tr><td>PHP</td><td>Language</td><td>8.5.7</td></tr><tr><td>Apache</td><td>Web Server</td><td>—</td></tr><tr><td>TLS/SSL</td><td>Security</td><td>—</td></tr></tbody>
+</table>
+<footer>Generated by VulnScan v1.0 · OWASP 2025<br/>Developed by Avideepth &amp; Rhitik · 2026-06-16</footer>
+</body></html>
