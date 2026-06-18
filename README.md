@@ -1,6 +1,9 @@
-# 🛡️ VulnScan — Web Vulnerability Scanner
+# 🛡️ VulnScan - Web Vulnerability Scanner
 
-A professional security operations dashboard with 40+ checks, multi-API threat intelligence, and real-time scanning
+VulnScan is a web-based security scanning platform that automatically identifies vulnerabilities in any web application or website. The system was built to give organisations an accurate, fast and readable picture of their current security posture without requiring a dedicated security engineer to run or interpret the results.
+The tool accepts a target URL from the user, launches a multi-layered scan across the most critical attack vectors published by the Open Web Application Security Project (OWASP) and returns a structured report with a risk score, individual vulnerability cards, port scan results, detected technologies, SSL health, DNS configuration and threat intelligence data pulled from third-party sources such as VirusTotal, Shodan, Google Safe Browsing and HaveIBeenPwned.
+The project was delivered as a full-stack application. The frontend interface was built with HTML, CSS and JavaScript to ensure it runs directly in any browser without installation. The backend engine was written in Python using the Flask framework and all scan records are persisted in a MySQL database so that historical scans can be revisited at any time.
+
 
 ---
 
@@ -8,6 +11,7 @@ A professional security operations dashboard with 40+ checks, multi-API threat i
 
 ```
 vulnscan/
+├── images               # Contains project images
 ├── index.html           # Full security dashboard UI
 ├── style.css            # Dark SOC theme based
 ├── app.js               # Dashboard JS (charts, scans, reports)
@@ -16,6 +20,7 @@ vulnscan/
 ├── api_integrations.py  # VirusTotal · Shodan · URLScan · GSB · HIBP · NVD
 ├── database.py          # MySQL persistence layer
 ├── config.py            # API keys + DB credentials
+├── vulnscan.docs        # Project Documentation
 └── requirements.txt
 ```
 
@@ -161,7 +166,7 @@ python app.py
 ### 4. Frontend
 
 ```bash
-# Option A — Python server (recommended, avoids CORS)
+# Option A — Python server
 python -m http.server 3000
 # Open: http://localhost:3000
 
