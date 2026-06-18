@@ -283,4 +283,5 @@ POST /scan
 VulnScan is for **authorized security testing only**.  
 Only scan systems you own or have **written permission** to test.  
 Unauthorized use may violate the India IT Act and other laws.
+
 Developed and Tested by Avideepth Behera (Me) & Rhitik Patil (Partner in crime).
