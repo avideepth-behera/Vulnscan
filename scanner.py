@@ -1377,6 +1377,8 @@ class VulnScanner:
                 })
 
     # ─────────────────────────────────────────────────────────────────────────
+
+    
     def _detect_tech(self, headers, body):
         techs = []
         h = headers
